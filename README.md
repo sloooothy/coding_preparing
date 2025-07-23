@@ -1,4 +1,4 @@
-# This is my coding preparation as a idividual programmer
+# This is my coding preparation for career
 
 ## Leetcode
 ### My primary coding language:
