@@ -1,7 +1,7 @@
 def dfs(node, visited):
     if node in visited:
         return
-    visited.add(node)
+    visited.add(node) #避免重複訪問
 
     # 處理節點
     # ...
