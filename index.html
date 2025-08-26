@@ -16,9 +16,7 @@
   </div>
 
   <script>
-    const owner = "sloooothy";
-    const repo = "coding_preparing";
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/commits`;
+    const apiUrl = "https://api.github.com/repos/sloooothy/coding_preparing/commits";
 
     async function loadCommits() {
       const res = await fetch(apiUrl);
