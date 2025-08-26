@@ -27,21 +27,25 @@
 
     const allowedExt = [".cpp", ".py", ".sql"];
 
-    async function loadCommits() {
+function withNoCache(url) {
+  return url + (url.includes("?") ? "&" : "?") + "_=" + Date.now();
+}
+
+async function loadCommits() {
   const container = document.getElementById("commits");
   container.innerHTML = `<li class="text-gray-500 text-center">載入中...</li>`;
 
   try {
-    // 加上亂數避免快取
-    const res = await fetch(`${apiUrl}&_=${Date.now()}`);
+    // ✅ 用 withNoCache 包 apiUrl
+    const res = await fetch(withNoCache(apiUrl));
     if (!res.ok) throw new Error("API 請求失敗");
     const commits = await res.json();
 
     const grouped = {};
 
     for (let commit of commits) {
-      // 取得 commit 詳細檔案
-      const detailRes = await fetch(`${commit.url}?_=${Date.now()}`);
+      // ✅ 這裡也用 withNoCache 包 commit.url
+      const detailRes = await fetch(withNoCache(commit.url));
       if (!detailRes.ok) continue;
       const detail = await detailRes.json();
 
@@ -111,6 +115,7 @@ document.getElementById("reloadBtn").addEventListener("click", () => {
 
 // 首次載入
 loadCommits();
+
   </script>
 </body>
 </html>
