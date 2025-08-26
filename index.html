@@ -18,28 +18,71 @@
   <script>
     const apiUrl = "https://api.github.com/repos/sloooothy/coding_preparing/commits";
 
+    const allowedExt = [".cpp", ".py", ".sql"];
+
     async function loadCommits() {
       const res = await fetch(apiUrl);
-      const data = await res.json();
+      const commits = await res.json();
 
-      const list = document.getElementById("commits");
-      list.innerHTML = "";
+      // 依日期分組
+      const grouped = {};
 
-      data.forEach(commit => {
-        const date = new Date(commit.commit.author.date).toLocaleString();
-        const li = document.createElement("li");
+      for (let commit of commits) {
+        // 先抓 commit 詳細檔案
+        const detailUrl = commit.url;
+        const detailRes = await fetch(detailUrl);
+        const detail = await detailRes.json();
 
-        li.innerHTML = `
-          <div class="bg-white shadow p-4 rounded-lg hover:shadow-md transition">
-            <a href="${commit.html_url}" target="_blank"
-               class="text-lg font-semibold text-blue-600 hover:underline">
-              ${commit.commit.message}
-            </a>
-            <div class="text-sm text-gray-500 mt-1">🕒 ${date}</div>
+        // 篩選檔案
+        const validFiles = detail.files?.filter(f =>
+          allowedExt.some(ext => f.filename.endsWith(ext))
+        );
+
+        if (!validFiles || validFiles.length === 0) continue;
+
+        const date = new Date(commit.commit.author.date)
+          .toISOString()
+          .split("T")[0]; // YYYY-MM-DD
+
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push({
+          msg: commit.commit.message,
+          url: commit.html_url,
+          time: new Date(commit.commit.author.date).toLocaleTimeString(),
+          files: validFiles.map(f => f.filename)
+        });
+      }
+
+      render(grouped);
+    }
+
+    function render(grouped) {
+      const container = document.getElementById("commits");
+      container.innerHTML = "";
+
+      Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(date => {
+        const section = document.createElement("div");
+        section.className = "mb-8";
+
+        section.innerHTML = `
+          <h2 class="text-2xl font-bold mb-4 text-gray-800">${date}</h2>
+          <div class="space-y-3">
+            ${grouped[date].map(c => `
+              <div class="bg-white shadow p-4 rounded-lg">
+                <a href="${c.url}" target="_blank"
+                   class="text-lg font-semibold text-blue-600 hover:underline">
+                  ${c.msg}
+                </a>
+                <div class="text-sm text-gray-500 mt-1">⏰ ${c.time}</div>
+                <div class="text-sm text-gray-600 mt-2">
+                  檔案: ${c.files.join(", ")}
+                </div>
+              </div>
+            `).join("")}
           </div>
         `;
 
-        list.appendChild(li);
+        container.appendChild(section);
       });
     }
 
