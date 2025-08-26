@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>我的刷題紀錄</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+  <div class="max-w-2xl w-full">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">
+      刷題紀錄
+    </h1>
+    <ul id="commits" class="space-y-4">
+      <li class="text-gray-500 text-center">載入中...</li>
+    </ul>
+  </div>
+
+  <script>
+    const owner = "你的GitHub帳號";
+    const repo = "你的Repo名稱";
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/commits`;
+
+    async function loadCommits() {
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+
+      const list = document.getElementById("commits");
+      list.innerHTML = "";
+
+      data.forEach(commit => {
+        const date = new Date(commit.commit.author.date).toLocaleString();
+        const li = document.createElement("li");
+
+        li.innerHTML = `
+          <div class="bg-white shadow p-4 rounded-lg hover:shadow-md transition">
+            <a href="${commit.html_url}" target="_blank"
+               class="text-lg font-semibold text-blue-600 hover:underline">
+              ${commit.commit.message}
+            </a>
+            <div class="text-sm text-gray-500 mt-1">🕒 ${date}</div>
+          </div>
+        `;
+
+        list.appendChild(li);
+      });
+    }
+
+    loadCommits();
+  </script>
+</body>
+</html>
