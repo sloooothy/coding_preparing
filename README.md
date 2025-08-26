@@ -3,6 +3,10 @@
 I am NOT a good coder, but I insist to do the practice as far as I am working in the field of computer science.
 Give me any advice if you think it's helpful, thank you.
 
+## recordPage
+
+    https://sloooothy.github.io/coding_preparing/
+
 ## Leetcode
 ### My primary coding language:
     1. Python (for AI project, too many frameworks rely on it)
