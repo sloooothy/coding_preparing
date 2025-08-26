@@ -10,6 +10,13 @@
     <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">
       刷題紀錄
     </h1>
+    <!-- 🔄 新增重新整理按鈕 -->
+      <div class="flex justify-center mb-6">
+        <button id="reloadBtn" 
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
+          🔄 重新整理
+        </button>
+      </div>
     <ul id="commits" class="space-y-4">
       <li class="text-gray-500 text-center">載入中...</li>
     </ul>
@@ -21,72 +28,89 @@
     const allowedExt = [".cpp", ".py", ".sql"];
 
     async function loadCommits() {
-      const res = await fetch(apiUrl);
-      const commits = await res.json();
+  const container = document.getElementById("commits");
+  container.innerHTML = `<li class="text-gray-500 text-center">載入中...</li>`;
 
-      // 依日期分組
-      const grouped = {};
+  try {
+    // 加上亂數避免快取
+    const res = await fetch(`${apiUrl}&_=${Date.now()}`);
+    if (!res.ok) throw new Error("API 請求失敗");
+    const commits = await res.json();
 
-      for (let commit of commits) {
-        // 先抓 commit 詳細檔案
-        const detailUrl = commit.url;
-        const detailRes = await fetch(detailUrl);
-        const detail = await detailRes.json();
+    const grouped = {};
 
-        // 篩選檔案
-        const validFiles = detail.files?.filter(f =>
-          allowedExt.some(ext => f.filename.endsWith(ext))
-        );
+    for (let commit of commits) {
+      // 取得 commit 詳細檔案
+      const detailRes = await fetch(`${commit.url}?_=${Date.now()}`);
+      if (!detailRes.ok) continue;
+      const detail = await detailRes.json();
 
-        if (!validFiles || validFiles.length === 0) continue;
+      // 篩選檔案
+      const validFiles = detail.files?.filter(f =>
+        allowedExt.some(ext => f.filename.endsWith(ext))
+      );
+      if (!validFiles || validFiles.length === 0) continue;
 
-        const date = new Date(commit.commit.author.date)
-          .toISOString()
-          .split("T")[0]; // YYYY-MM-DD
+      const dateObj = new Date(commit.commit.author.date);
+      const date = dateObj.toLocaleDateString("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
 
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push({
-          msg: commit.commit.message,
-          url: commit.html_url,
-          time: new Date(commit.commit.author.date).toLocaleTimeString(),
-          files: validFiles.map(f => f.filename)
-        });
-      }
-
-      render(grouped);
-    }
-
-    function render(grouped) {
-      const container = document.getElementById("commits");
-      container.innerHTML = "";
-
-      Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(date => {
-        const section = document.createElement("div");
-        section.className = "mb-8";
-
-        section.innerHTML = `
-          <h2 class="text-2xl font-bold mb-4 text-gray-800">${date}</h2>
-          <div class="space-y-3">
-            ${grouped[date].map(c => `
-              <div class="bg-white shadow p-4 rounded-lg">
-                <a href="${c.url}" target="_blank"
-                   class="text-lg font-semibold text-blue-600 hover:underline">
-                  ${c.msg}
-                </a>
-                <div class="text-sm text-gray-500 mt-1">⏰ ${c.time}</div>
-                <div class="text-sm text-gray-600 mt-2">
-                  檔案: ${c.files.join(", ")}
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        `;
-
-        container.appendChild(section);
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push({
+        msg: commit.commit.message,
+        url: commit.html_url,
+        time: dateObj.toLocaleTimeString("zh-TW"),
+        files: validFiles.map(f => f.filename)
       });
     }
 
-    loadCommits();
+    render(grouped);
+  } catch (err) {
+    container.innerHTML = `<li class="text-red-500 text-center">⚠️ 載入失敗：${err.message}</li>`;
+  }
+}
+
+function render(grouped) {
+  const container = document.getElementById("commits");
+  container.innerHTML = "";
+
+  Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(date => {
+    const section = document.createElement("div");
+    section.className = "mb-8";
+
+    section.innerHTML = `
+      <h2 class="text-2xl font-bold mb-4 bg-gray-200 px-3 py-1 rounded">
+        ${date}
+      </h2>
+      <div class="space-y-3">
+        ${grouped[date].map(c => `
+          <div class="bg-white shadow p-4 rounded-lg">
+            <a href="${c.url}" target="_blank"
+               class="text-lg font-semibold text-blue-600 hover:underline">
+              ${c.msg}
+            </a>
+            <div class="text-sm text-gray-500 mt-1">⏰ ${c.time}</div>
+            <div class="text-sm text-gray-600 mt-2">
+              檔案: ${c.files.join(", ")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    container.appendChild(section);
+  });
+}
+
+// 🔄 綁定重新整理按鈕
+document.getElementById("reloadBtn").addEventListener("click", () => {
+  loadCommits();
+});
+
+// 首次載入
+loadCommits();
   </script>
 </body>
 </html>
