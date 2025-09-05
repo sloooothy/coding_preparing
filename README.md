@@ -5,7 +5,7 @@ Give me any advice if you think it's helpful, thank you.
 
 ## recordPage
 
-    <https://sloooothy.github.io/coding_preparing/>
+<https://sloooothy.github.io/coding_preparing/>
 
 ## Leetcode
 ### My primary coding language:
