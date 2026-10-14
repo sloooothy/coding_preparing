@@ -7,23 +7,25 @@
 
 class Solution:
     def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
-        
-        def dfs(node,list_nodes):
 
-            if(node.left):
-                dfs(node.left,list_nodes)
-            
-            list_nodes.append(node.val)
+        qn=[] #queue of sorted elements
 
-            if(node.right):
-                dfs(node.right,list_nodes)
-
-            if(len(list_nodes)==k):
+        def dfs(root):
+            if not root:
                 return 
-            
-        nodeList=[]
-        dfs(root,nodeList)
-        
-        return nodeList[k-1]
                 
+            dfs(root.left)
 
+            if len(qn)<k:
+                qn.append(root.val)
+
+            
+            dfs(root.right)
+
+        dfs(root)
+        return qn[-1]
+
+
+        
+            
+        
